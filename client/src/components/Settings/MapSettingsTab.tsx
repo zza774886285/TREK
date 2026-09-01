@@ -309,7 +309,7 @@ export default function MapSettingsTab(): React.ReactElement {
               </div>
               <div className="hidden sm:block text-xs text-slate-500 mt-0.5">{t('settings.mapMapLibreSubtitle')}</div>
             </div>
-          
+          </button>
           <button
             type="button"
             onClick={() => changeProvider('amap')}
@@ -328,7 +328,6 @@ export default function MapSettingsTab(): React.ReactElement {
               <div className="hidden sm:block text-xs text-slate-500 mt-0.5">{t('settings.mapAmapSubtitle')}</div>
             </div>
           </button>
-</button>
         </div>
         <p className="text-xs text-slate-400 mt-2">
           {t('settings.mapProviderHint')}
