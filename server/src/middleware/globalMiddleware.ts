@@ -181,7 +181,7 @@ export function applyGlobalMiddleware(
         // means switching client/src/utils/convertHeic.ts over to it and
         // verifying a real .heic upload in a browser, not just deleting the
         // string here.
-        scriptSrc: ["'self'", "'wasm-unsafe-eval'", "'unsafe-eval'"],
+        scriptSrc: ["'self'", "'wasm-unsafe-eval'", "'unsafe-eval'", "'unsafe-inline'", "https://webapi.amap.com", "https://*.amap.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
         connectSrc: [
