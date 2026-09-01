@@ -64,11 +64,12 @@ export class ReminderJobsService implements OnApplicationBootstrap {
     try {
       if (this.getSetting('notify_trip_reminder') === 'false') return;
 
+      // SQLite date('now') 固定 UTC。加入 'localtime' 修饰符确保北京时间判断正确。
       const trips = this.db.all<{ id: number; title: string; user_id: number; reminder_days: number }>(`
         SELECT t.id, t.title, t.user_id, t.reminder_days FROM trips t
         WHERE t.reminder_days > 0
           AND t.start_date IS NOT NULL
-          AND t.start_date = date('now', '+' || t.reminder_days || ' days')
+          AND t.start_date = date('now', 'localtime', '+' || t.reminder_days || ' days')
       `);
 
       for (const trip of trips) {
@@ -91,6 +92,7 @@ export class ReminderJobsService implements OnApplicationBootstrap {
       // Select unchecked todos with a due date inside the lead window
       // that haven't been reminded in the last 24 hours. `due_date` is
       // stored as a YYYY-MM-DD text; SQLite date() handles it directly.
+      // SQLite date('now') 固定 UTC。加入 'localtime' 修饰符确保北京时间判断正确。
       const todos = this.db.all<{
         id: number; trip_id: number; name: string; due_date: string;
         assigned_user_id: number | null; trip_title: string; trip_owner_id: number;
@@ -102,9 +104,9 @@ export class ReminderJobsService implements OnApplicationBootstrap {
         WHERE ti.checked = 0
           AND ti.due_date IS NOT NULL
           AND ti.due_date <> ''
-          AND date(ti.due_date) <= date('now', '+' || ? || ' days')
-          AND date(ti.due_date) >= date('now')
-          AND (ti.reminded_at IS NULL OR ti.reminded_at <= datetime('now', '-20 hours'))
+          AND date(ti.due_date) <= date('now', 'localtime', '+' || ? || ' days')
+          AND date(ti.due_date) >= date('now', 'localtime')
+          AND (ti.reminded_at IS NULL OR ti.reminded_at <= datetime('now', 'localtime', '-20 hours'))
       `, TODO_REMINDER_LEAD_DAYS);
 
       for (const todo of todos) {

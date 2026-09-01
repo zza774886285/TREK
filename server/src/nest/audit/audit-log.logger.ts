@@ -72,8 +72,14 @@ function writeToFile(line: string): void {
 
 // ── Public log helpers ────────────────────────────────────────────────────
 
+/**
+ * 生成带时区的 ISO 时间戳。
+ * 优先读取 TZ 环境变量（docker-compose / Dockerfile 已设 Asia/Shanghai），
+ * 再读 readEnv().app.tz（用户可在设置页面覆盖），
+ * 最后兜底 UTC。
+ */
 function formatTs(): string {
-  const tz = readEnv().app.tz || 'UTC';
+  const tz = process.env.TZ || readEnv().app.tz || 'UTC';
   return new Date().toLocaleString('sv-SE', { timeZone: tz }).replace(' ', 'T');
 }
 

@@ -344,8 +344,15 @@ export class TripsService {
    * Kept separate from list() on purpose: this runs on the very first paint of
    * a startup redirect, so it reads four columns of one row instead of every
    * trip with its per-trip day/place counts.
+   *
+   * Uses TZ env var to determine "today" in the container's timezone.
    */
-  activeTrip(userId: number, today = new Date().toISOString().slice(0, 10)) {
+  activeTrip(userId: number, today?: string) {
+    if (!today) {
+      // 使用 TZ 环境变量获取本地日期，而非固定 UTC
+      const tz = process.env.TZ || 'Asia/Shanghai';
+      today = new Date().toLocaleDateString('sv-SE', { timeZone: tz });
+    }
     return this.db.prepare(`
       SELECT t.id, t.title, t.start_date, t.end_date,
         CASE

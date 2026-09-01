@@ -596,6 +596,18 @@ export const MapView = memo(function MapView({
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
   const mapMovingRef = useRef(false)
 
+  // 瓦片加载失败降级提示（海外瓦片资源不可用时）
+  const [tileLoadFailed, setTileLoadFailed] = useState(false)
+  const tileRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleTileError = useCallback(() => {
+    if (tileRetryTimerRef.current) return // 已在重试中
+    setTileLoadFailed(true)
+    tileRetryTimerRef.current = setTimeout(() => {
+      setTileLoadFailed(false)
+      tileRetryTimerRef.current = null
+    }, 6000)
+  }, [])
+
   const handleMarkerHover = useCallback((place: any, x: number, y: number) => {
     if (hoverDisabled || mapMovingRef.current) return
     setHoveredPlace(place)
@@ -855,6 +867,7 @@ export const MapView = memo(function MapView({
           updateWhenZooming={false}
           updateWhenIdle={true}
           referrerPolicy="strict-origin-when-cross-origin"
+          eventHandlers={{ tileerror: handleTileError }}
         />
       ) : basemap.kind === 'vector' ? (
         <VectorBasemap style={basemap.style} />
@@ -868,7 +881,29 @@ export const MapView = memo(function MapView({
           updateWhenZooming={false}
           updateWhenIdle={true}
           referrerPolicy="strict-origin-when-cross-origin"
+          eventHandlers={{ tileerror: handleTileError }}
         />
+      )}
+
+      {/* 瓦片加载失败降级提示 */}
+      {tileLoadFailed && (
+        <div style={{
+          position: 'absolute',
+          bottom: 40,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.78)',
+          color: '#fff',
+          padding: '6px 18px',
+          borderRadius: 8,
+          fontSize: 13,
+          zIndex: 1000,
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+        }}>
+          地图瓦片加载失败，请检查网络连接
+        </div>
       )}
 
       <MapController center={center} zoom={zoom} />

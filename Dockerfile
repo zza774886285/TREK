@@ -108,6 +108,8 @@ RUN mkdir -p /app/data/logs /app/uploads/files /app/uploads/covers /app/uploads/
 ENV NODE_ENV=production
 ENV NODE_USE_ENV_PROXY=1
 ENV PORT=3000
+# ── 时区：确保容器内日志、cron、定时任务默认 Asia/Shanghai ──
+ENV TZ=Asia/Shanghai
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
 
