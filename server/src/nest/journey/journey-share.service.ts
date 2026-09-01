@@ -249,6 +249,9 @@ export class JourneyShareService {
     // reaches a browser.
     const ownerCartoKey = this.settings.getUserSettings(journey.user_id)['carto_api_key'];
     const cartoApiKey = typeof ownerCartoKey === 'string' ? ownerCartoKey.trim() : '';
+    // 高德 Key 同理：加密存储但不解密掩码，需传递到浏览器。
+    const ownerAmapKey = this.settings.getUserSettings(journey.user_id)['amap_api_key'];
+    const amapApiKey = typeof ownerAmapKey === 'string' ? ownerAmapKey.trim() : '';
 
     return {
       journey: {
@@ -265,6 +268,7 @@ export class JourneyShareService {
       gallery: shareGallery ? (shareMap ? gallery : stripPhotoGps(gallery)) : [],
       stats,
       cartoApiKey,
+      amapApiKey,
       permissions: {
         share_timeline: shareTimeline,
         share_gallery: shareGallery,

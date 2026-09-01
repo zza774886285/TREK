@@ -78,6 +78,8 @@ export function isManagedBlocked(env: RuntimeEnvService): boolean {
  */
 export const MANAGED_LOCKED_SETTING_KEYS = [
   'carto_api_key',
+  // 高德地图 API Key，同 carto_api_key 逻辑：实例运营者持有。
+  'amap_api_key',
   'llm_api_key',
   'llm_base_url',
   'llm_model',

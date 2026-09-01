@@ -303,10 +303,13 @@ export class ShareService {
     // Mapbox token, both have to reach a browser), and it is the only accessor that
     // composes per-user value → admin instance default → managed-instance key.
     const ownerCartoKey = ownerSettings['carto_api_key'];
+    // 高德 Key 同理：加密存储但不解密掩码，需传递到浏览器。
+    const ownerAmapKey = ownerSettings['amap_api_key'];
+    const amapApiKey = typeof ownerAmapKey === 'string' ? ownerAmapKey.trim() : '';
     const cartoApiKey = typeof ownerCartoKey === 'string' ? ownerCartoKey.trim() : '';
 
     return {
-      trip, baseCurrency, cartoApiKey, categories, permissions,
+      trip, baseCurrency, cartoApiKey, amapApiKey, categories, permissions,
       days, assignments, dayNotes, places,
       reservations, accommodations,
       packing, budget,
