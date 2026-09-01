@@ -516,9 +516,7 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'API 密钥已创建',
   'settings.apiKeys.modal.createdWarning': '请立即复制密钥。它只显示一次，之后无法再次获取。',
   'settings.apiKeys.modal.done': '完成',
-};
-
-export default settings;
+  'settings.apiKeys.modal.done': '完成',
 
   // ── 高德地图 ──
   'settings.mapAmapSubtitle': '中国境内首选，GCJ-02 坐标系',
@@ -528,4 +526,7 @@ export default settings;
 
   // ── POI 搜索源 ──
   'settings.poiSearchSource': 'POI 地点搜索源',
-  'settings.poiSearchSourceHint': '切换地点搜索使用的数据源。高德 POI 需要填写高德 API Key。'
+  'settings.poiSearchSourceHint': '切换地点搜索使用的数据源。高德 POI 需要填写高德 API Key。',
+};
+
+export default settings;

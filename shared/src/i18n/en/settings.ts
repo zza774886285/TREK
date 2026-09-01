@@ -546,9 +546,7 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'API key created',
   'settings.apiKeys.modal.createdWarning': 'Copy the key now. It is shown once and cannot be retrieved later.',
   'settings.apiKeys.modal.done': 'Done',
-};
-
-export default settings;
+  'settings.apiKeys.modal.done': 'Done',
 
   // ── AMap (Gaode) ──
   'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
@@ -558,4 +556,7 @@ export default settings;
 
   // ── POI Search Source ──
   'settings.poiSearchSource': 'POI Search Source',
-  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.'
+  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.',
+};
+
+export default settings;
