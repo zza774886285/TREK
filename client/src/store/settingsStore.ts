@@ -46,6 +46,7 @@ export const DEFAULT_SETTINGS: Settings = {
   map_poi_pill_enabled: true,
   carto_api_key: '',
   amap_api_key: '',
+  amap_service_key: '',
   poi_search_source: 'osm',
   mapbox_access_token: '',
   mapbox_style: 'mapbox://styles/mapbox/standard',

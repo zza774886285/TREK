@@ -59,15 +59,29 @@ function gcjPosition(lng: number, lat: number): [number, number] {
 function loadAmapScript(apiKey: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.AMap) { resolve(); return }
-    const existing = document.querySelector(`script[src*="webapi.amap.com"]`)
-    if (existing) { existing.addEventListener('load', () => resolve()); return }
-    const script = document.createElement('script')
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
-    script.onload = () => {
-      window.AMap?.load?.().then(() => resolve()).catch(() => resolve())
+    // AMap JS API 2.0 requires security configuration before loading
+    (window as any)._AMapSecurityConfig = {
+      securityJsCode: 'ff612f9b4cd1e8a1b02a885d88204e60',
     }
-    script.onerror = () => reject(new Error('Failed to load AMap JS API'))
-    document.head.appendChild(script)
+    // Load security.js first
+    const secScript = document.createElement('script')
+    secScript.src = 'https://webapi.amap.com/security.js'
+    secScript.onload = () => {
+      const mainScript = document.createElement('script')
+      mainScript.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
+      mainScript.onload = () => resolve()
+      mainScript.onerror = () => reject(new Error('Failed to load AMap JS API'))
+      document.head.appendChild(mainScript)
+    }
+    secScript.onerror = () => {
+      // Fallback without security.js
+      const mainScript = document.createElement('script')
+      mainScript.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
+      mainScript.onload = () => resolve()
+      mainScript.onerror = () => reject(new Error('Failed to load AMap JS API'))
+      document.head.appendChild(mainScript)
+    }
+    document.head.appendChild(secScript)
   })
 }
 

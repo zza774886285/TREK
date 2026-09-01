@@ -174,6 +174,7 @@ export default function MapSettingsTab(): React.ReactElement {
   const [mapboxToken, setMapboxToken] = useState<string>(settings.mapbox_access_token || '')
   const [cartoKey, setCartoKey] = useState<string>(settings.carto_api_key || '')
   const [amapKey, setAmapKey] = useState<string>(settings.amap_api_key || '')
+  const [amapServiceKey, setAmapServiceKey] = useState<string>(settings.amap_service_key || '')
   const [poiSearchSource, setPoiSearchSource] = useState<'osm' | 'amap'>(settings.poi_search_source || 'osm')
   const [mapboxStyle, setMapboxStyle] = useState<string>(styleForProvider(initialProvider, slotStyle(initialProvider, settings)))
   const [mapbox3d, setMapbox3d] = useState<boolean>(settings.mapbox_3d_enabled !== false)
@@ -188,6 +189,7 @@ export default function MapSettingsTab(): React.ReactElement {
     setMapboxToken(settings.mapbox_access_token || '')
     setCartoKey(settings.carto_api_key || '')
     setAmapKey(settings.amap_api_key || '')
+    setAmapServiceKey(settings.amap_service_key || '')
     setPoiSearchSource(settings.poi_search_source || 'osm')
     setMapboxStyle(styleForProvider(nextProvider, slotStyle(nextProvider, settings)))
     setMapbox3d(settings.mapbox_3d_enabled !== false)
@@ -225,6 +227,7 @@ export default function MapSettingsTab(): React.ReactElement {
         mapbox_access_token: mapboxToken,
         carto_api_key: cartoKey,
         amap_api_key: amapKey,
+        amap_service_key: amapServiceKey,
         poi_search_source: poiSearchSource,
         ...stylePatch,
         mapbox_3d_enabled: mapbox3d,
@@ -519,19 +522,32 @@ export default function MapSettingsTab(): React.ReactElement {
       {/* 高德地图 Key 输入 */}
       {!managed && (
         <div className="mt-4">
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('settings.mapAmapKey')}</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">高德 JS API Key（地图渲染）</label>
           <input
             type="text"
             value={amapKey}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmapKey(e.target.value)}
-            placeholder="请输入高德 Web 端 API Key"
+            placeholder="d97e5a8e..."
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
           />
           <p className="text-xs text-slate-400 mt-1">
-            {t('settings.mapAmapKeyHint')}{' '}
-            <a href="https://lbs.amap.com/api/javascript-api-v2/guide/abc/prepare" target="_blank" rel="noreferrer" className="underline">
-              高德开放平台
-            </a>
+            用于高德地图底图渲染。在{' '}
+            <a href="https://lbs.amap.com/" target="_blank" rel="noreferrer" className="underline">lbs.amap.com</a>{' '}
+            → 应用管理 → JS API Key 获取
+          </p>
+
+          <label className="block text-sm font-medium text-slate-700 mb-1.5 mt-3">高德 Web Service Key（POI 搜索）</label>
+          <input
+            type="text"
+            value={amapServiceKey}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmapServiceKey(e.target.value)}
+            placeholder="3269d02c..."
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            用于 POI 地点搜索。在{' '}
+            <a href="https://lbs.amap.com/" target="_blank" rel="noreferrer" className="underline">lbs.amap.com</a>{' '}
+            → 应用管理 → Web服务 Key 获取
           </p>
         </div>
       )}

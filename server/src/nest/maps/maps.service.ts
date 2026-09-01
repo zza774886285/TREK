@@ -1451,10 +1451,10 @@ export class MapsService {
    * 高德 POI 关键词搜索。REST API: https://restapi.amap.com/v3/place/text
    */
   async searchAmapPoi(
-    amapKey: string, query: string, lang?: string,
+    amapServiceKey: string, query: string, lang?: string,
     locationBias?: { lat: number; lng: number; radius?: number },
   ): Promise<{ places: Record<string, unknown>[]; source: string }> {
-    const params = new URLSearchParams({ key: amapKey, keywords: query, output: 'json', offset: '10', extensions: 'base' });
+    const params = new URLSearchParams({ key: amapServiceKey, keywords: query, output: 'json', offset: '10', extensions: 'base' });
     const response = await fetch(`https://restapi.amap.com/v3/place/text?${params.toString()}`);
     if (!response.ok) throw new Error(`AMap POI API error: ${response.status}`);
     const data = await response.json() as { status: string; info: string; pois?: Array<{ name: string; address: string; location: string; poiid: string; tel?: string; website?: string; type: string }> };
@@ -1481,7 +1481,9 @@ export class MapsService {
         'SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'amap_api_key'
       );
       if (_amapRow?.value && _amapRow.value.trim()) {
-        return await this.searchAmapPoi(_amapRow.value.trim(), query, lang, locationBias);
+        const _svcRow = this.database.get<{ value: string }>('SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'amap_service_key');
+        const _svcKey = _svcRow?.value && _svcRow.value.trim() ? _svcRow.value.trim() : _amapRow.value.trim();
+        return await this.searchAmapPoi(_svcKey, query, lang, locationBias);
       }
     }
     const { key: apiKey, source: keySource } = this.resolveMapsKey(userId);

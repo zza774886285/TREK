@@ -16,6 +16,7 @@ export const ENCRYPTED_SETTING_KEYS = new Set([
   'carto_api_key',
   // 高德地图 API Key，管理员可设实例级默认值。
   'amap_api_key',
+  'amap_service_key',
   // POI 地点搜索源：'osm' (默认) 或 'amap' (高德)
   'poi_search_source',
   'llm_api_key',
@@ -40,6 +41,7 @@ export const DEFAULTABLE_USER_SETTING_KEYS = [
   'carto_api_key',
   // 高德地图 API Key，管理员可设实例级默认值。
   'amap_api_key',
+  'amap_service_key',
   // POI 地点搜索源：'osm' (默认) 或 'amap' (高德)
   'poi_search_source',
   // Instance-wide GL map defaults: admins can set Mapbox token/style or
