@@ -1447,12 +1447,43 @@ export class MapsService {
 
   // ── Search places (Google or Nominatim fallback) ───────────────────────────
 
+  /**
+   * 高德 POI 关键词搜索。REST API: https://restapi.amap.com/v3/place/text
+   */
+  async searchAmapPoi(
+    amapKey: string, query: string, lang?: string,
+    locationBias?: { lat: number; lng: number; radius?: number },
+  ): Promise<{ places: Record<string, unknown>[]; source: string }> {
+    const params = new URLSearchParams({ key: amapKey, keywords: query, output: 'json', offset: '10', extensions: 'base' });
+    const response = await fetch(`https://restapi.amap.com/v3/place/text?${params.toString()}`);
+    if (!response.ok) throw new Error(`AMap POI API error: ${response.status}`);
+    const data = await response.json() as { status: string; info: string; pois?: Array<{ name: string; address: string; location: string; poiid: string; tel?: string; website?: string; type: string }> };
+    if (data.status !== '1') throw new Error(`AMap POI error: ${data.info}`);
+    const places = (data.pois || []).map(poi => {
+      const [lng, lat] = poi.location.split(',').map(Number);
+      return { google_place_id: null, google_ftid: null, osm_id: `amap:${poi.poiid}`, name: poi.name, address: poi.address || '', lat, lng, rating: null, website: poi.website || null, phone: poi.tel || null, types: poi.type ? [poi.type] : [], source: 'amap' };
+    });
+    return { places, source: 'amap' };
+  }
+
   async searchPlaces(
     userId: number,
     query: string,
     lang?: string,
     locationBias?: { lat: number; lng: number; radius?: number },
   ): Promise<{ places: Record<string, unknown>[]; source: string }> {
+    // ── POI 搜索源路由：用户设置 poi_search_source 控制 ──
+    const _poiRow = this.database.get<{ value: string }>(
+      'SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'poi_search_source'
+    );
+    if (_poiRow?.value === 'amap') {
+      const _amapRow = this.database.get<{ value: string }>(
+        'SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'amap_api_key'
+      );
+      if (_amapRow?.value && _amapRow.value.trim()) {
+        return await this.searchAmapPoi(_amapRow.value.trim(), query, lang, locationBias);
+      }
+    }
     const { key: apiKey, source: keySource } = this.resolveMapsKey(userId);
 
     if (!apiKey) {

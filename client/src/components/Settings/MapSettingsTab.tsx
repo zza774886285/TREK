@@ -529,6 +529,23 @@ export default function MapSettingsTab(): React.ReactElement {
           </p>
         </div>
       )}
+
+      {/* POI search source toggle */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('settings.poiSearchSource')}</label>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setPoiSearchSource('osm')}
+            className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${poiSearchSource === 'osm' ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-slate-200' : 'border-slate-200 hover:border-slate-400 dark:border-slate-700'}`}>
+            OSM (Nominatim)
+          </button>
+          <button type="button" onClick={() => { if (amapKey.trim()) setPoiSearchSource('amap') }} disabled={!amapKey.trim()}
+            className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${poiSearchSource === 'amap' ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-slate-200' : amapKey.trim() ? 'border-slate-200 hover:border-slate-400 dark:border-slate-700' : 'border-slate-100 opacity-50 cursor-not-allowed dark:border-slate-800'}`}>
+            高德 POI
+          </button>
+        </div>
+        <p className="text-xs text-slate-400 mt-1">{t('settings.poiSearchSourceHint')}</p>
+      </div>
+
       <button type="button"
         onClick={saveMapSettings}
         disabled={saving}

@@ -555,3 +555,7 @@ export default settings;
   'settings.mapAmapKey': 'AMap Web API Key',
   'settings.mapAmapKeyHint': 'For AMap basemap tiles and POI search. Free at lbs.amap.com',
   'settings.mapAmapKeyMissing': 'AMap option is greyed out without a key. Falls back to Leaflet automatically.',
+
+  // ── POI Search Source ──
+  'settings.poiSearchSource': 'POI Search Source',
+  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.'
