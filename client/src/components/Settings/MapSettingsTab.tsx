@@ -135,10 +135,11 @@ function StyleDropdown({ value, provider, onChange }: { value: string; provider:
   )
 }
 
-type Provider = 'leaflet' | GlMapProvider
+type Provider = 'leaflet' | GlMapProvider | 'amap'
 
 function normalizeProvider(value: unknown): Provider {
-  return value === 'mapbox-gl' || value === 'maplibre-gl' ? value : 'leaflet'
+  if (value === 'mapbox-gl' || value === 'maplibre-gl' || value === 'amap') return value as Provider
+  return 'leaflet'
 }
 
 function styleForProvider(provider: Provider, style?: string | null): string {
@@ -215,7 +216,7 @@ export default function MapSettingsTab(): React.ReactElement {
   const saveMapSettings = async (): Promise<void> => {
     setSaving(true)
     try {
-      const glStyle = provider === 'leaflet' ? mapboxStyle : normalizeStyleForProvider(provider, mapboxStyle)
+      const glStyle = provider === 'leaflet' || provider === 'amap' ? mapboxStyle : normalizeStyleForProvider(provider, mapboxStyle)
       // Save into the active provider's own slot so the other provider's style survives.
       const stylePatch = provider === 'maplibre-gl' ? { maplibre_style: glStyle } : { mapbox_style: glStyle }
       await updateSettings({
@@ -244,7 +245,7 @@ export default function MapSettingsTab(): React.ReactElement {
   const supports3d = true
   const changeProvider = (nextProvider: Provider) => {
     setProvider(nextProvider)
-    if (nextProvider !== 'leaflet') setMapboxStyle(styleForProvider(nextProvider, mapboxStyle))
+    if (nextProvider !== 'leaflet' && nextProvider !== 'amap') setMapboxStyle(styleForProvider(nextProvider, mapboxStyle))
   }
   // Only CARTO burns a watermark into keyless tiles, so the nudge is scoped to its hosts.
   const cartoNeedsKey = mapTileUrl.includes('basemaps.cartocdn.com') && !cartoKey.trim()
@@ -382,7 +383,7 @@ export default function MapSettingsTab(): React.ReactElement {
       )}
 
       {/* GL settings */}
-      {provider !== 'leaflet' && (
+      {provider !== 'leaflet' && provider !== 'amap' && (
         <div className="space-y-3">
           {/* The token comes with the instance on a managed install, injected when the
               settings are read. A field here would only let somebody save a worse one. */}
