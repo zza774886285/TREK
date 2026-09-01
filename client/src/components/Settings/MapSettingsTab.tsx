@@ -172,6 +172,8 @@ export default function MapSettingsTab(): React.ReactElement {
   const managed = useAuthStore((s) => s.managed)
   const [mapboxToken, setMapboxToken] = useState<string>(settings.mapbox_access_token || '')
   const [cartoKey, setCartoKey] = useState<string>(settings.carto_api_key || '')
+  const [amapKey, setAmapKey] = useState<string>(settings.amap_api_key || '')
+  const [poiSearchSource, setPoiSearchSource] = useState<'osm' | 'amap'>(settings.poi_search_source || 'osm')
   const [mapboxStyle, setMapboxStyle] = useState<string>(styleForProvider(initialProvider, slotStyle(initialProvider, settings)))
   const [mapbox3d, setMapbox3d] = useState<boolean>(settings.mapbox_3d_enabled !== false)
   const [mapboxQuality, setMapboxQuality] = useState<boolean>(settings.mapbox_quality_mode === true)
@@ -184,6 +186,8 @@ export default function MapSettingsTab(): React.ReactElement {
     setMapTileUrl(settings.map_tile_url || '')
     setMapboxToken(settings.mapbox_access_token || '')
     setCartoKey(settings.carto_api_key || '')
+    setAmapKey(settings.amap_api_key || '')
+    setPoiSearchSource(settings.poi_search_source || 'osm')
     setMapboxStyle(styleForProvider(nextProvider, slotStyle(nextProvider, settings)))
     setMapbox3d(settings.mapbox_3d_enabled !== false)
     setMapboxQuality(settings.mapbox_quality_mode === true)
@@ -219,6 +223,8 @@ export default function MapSettingsTab(): React.ReactElement {
         map_tile_url: mapTileUrl,
         mapbox_access_token: mapboxToken,
         carto_api_key: cartoKey,
+        amap_api_key: amapKey,
+        poi_search_source: poiSearchSource,
         ...stylePatch,
         mapbox_3d_enabled: mapbox3d,
         mapbox_quality_mode: mapboxQuality,
@@ -511,8 +517,8 @@ export default function MapSettingsTab(): React.ReactElement {
 
 
       {/* 高德地图 Key 输入 */}
-      {provider === 'amap' && !managed && (
-        <div>
+      {!managed && (
+        <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('settings.mapAmapKey')}</label>
           <input
             type="text"
