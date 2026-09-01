@@ -1474,14 +1474,14 @@ export class MapsService {
   ): Promise<{ places: Record<string, unknown>[]; source: string }> {
     // ── POI 搜索源路由：用户设置 poi_search_source 控制 ──
     const _poiRow = this.database.get<{ value: string }>(
-      'SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'poi_search_source'
+      'SELECT value FROM app_settings WHERE key = ?', 'poi_search_source'
     );
     if (_poiRow?.value === 'amap') {
       const _amapRow = this.database.get<{ value: string }>(
-        'SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'amap_api_key'
+        'SELECT value FROM app_settings WHERE key = ?', 'amap_api_key'
       );
       if (_amapRow?.value && _amapRow.value.trim()) {
-        const _svcRow = this.database.get<{ value: string }>('SELECT value FROM user_settings WHERE user_id = ? AND key = ?', userId, 'amap_service_key');
+        const _svcRow = this.database.get<{ value: string }>('SELECT value FROM app_settings WHERE key = ?', 'amap_service_key');
         const _svcKey = _svcRow?.value && _svcRow.value.trim() ? _svcRow.value.trim() : _amapRow.value.trim();
         return await this.searchAmapPoi(_svcKey, query, lang, locationBias);
       }

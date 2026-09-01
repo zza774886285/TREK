@@ -59,14 +59,17 @@ function gcjPosition(lng: number, lat: number): [number, number] {
 function loadAmapScript(apiKey: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.AMap) { resolve(); return }
-    // AMap JS API 2.0 requires security configuration before loading
-    (window as any)._AMapSecurityConfig = {
-      securityJsCode: 'ff612f9b4cd1e8a1b02a885d88204e60',
+    // AMap JS API 2.0: set security config BEFORE loading any scripts
+    if (!(window as any)._AMapSecurityConfig) {
+      (window as any)._AMapSecurityConfig = {
+        securityJsCode: 'ff612f9b4cd1e8a1b02a885d88204e60',
+      }
     }
     // Load security.js first
     const secScript = document.createElement('script')
     secScript.src = 'https://webapi.amap.com/security.js'
     secScript.onload = () => {
+      // Then load main API
       const mainScript = document.createElement('script')
       mainScript.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
       mainScript.onload = () => resolve()
@@ -74,7 +77,7 @@ function loadAmapScript(apiKey: string): Promise<void> {
       document.head.appendChild(mainScript)
     }
     secScript.onerror = () => {
-      // Fallback without security.js
+      // Try direct load without security.js
       const mainScript = document.createElement('script')
       mainScript.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
       mainScript.onload = () => resolve()

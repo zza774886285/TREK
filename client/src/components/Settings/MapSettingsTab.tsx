@@ -471,7 +471,17 @@ export default function MapSettingsTab(): React.ReactElement {
 
       <div>
         <div style={{ position: 'relative', inset: 0, height: '200px', width: '100%' }}>
-          {provider !== 'leaflet' ? (
+          {provider === 'amap' ? (
+            // AMap preview - show a simple placeholder with the AMap logo
+            <div className="h-full w-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg">
+              <div className="text-center">
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">高德地图</div>
+                <div className="text-xs text-slate-500 mt-1">
+                  {amapKey.trim() ? '保存后可在行程中查看高德地图' : '请先填写 JS API Key'}
+                </div>
+              </div>
+            </div>
+          ) : provider !== 'leaflet' ? (
             /* A net of its own: the preview is the one place a user flips providers
                live, so it is the likeliest chunk to fail — and a broken preview must
                not take the rest of the settings tab with it. */
