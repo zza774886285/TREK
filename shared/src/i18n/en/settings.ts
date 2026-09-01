@@ -549,3 +549,9 @@ const settings: TranslationStrings = {
 };
 
 export default settings;
+
+  // ── AMap (Gaode) ──
+  'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
+  'settings.mapAmapKey': 'AMap Web API Key',
+  'settings.mapAmapKeyHint': 'For AMap basemap tiles and POI search. Free at lbs.amap.com',
+  'settings.mapAmapKeyMissing': 'AMap option is greyed out without a key. Falls back to Leaflet automatically.',

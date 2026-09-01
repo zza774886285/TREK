@@ -121,11 +121,13 @@ export interface Settings {
   map_poi_pill_enabled?: boolean
   map_always_show_routes?: boolean
   optimize_from_accommodation?: boolean
-  map_provider?: 'leaflet' | 'mapbox-gl' | 'maplibre-gl'
+  map_provider?: 'leaflet' | 'mapbox-gl' | 'maplibre-gl' | 'amap'
   /** Leaflet base layer: default street tiles or a satellite/aerial view. */
   map_base_layer?: 'default' | 'satellite'
   /** CARTO basemaps watermark keyless tiles; the key is appended as ?key= (#2054). */
   carto_api_key?: string
+  /** 高德 Web 端 API Key，用于高德地图底图和 POI 搜索。 */
+  amap_api_key?: string
   mapbox_access_token?: string
   mapbox_style?: string
   maplibre_style?: string

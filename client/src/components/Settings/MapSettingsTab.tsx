@@ -248,7 +248,7 @@ export default function MapSettingsTab(): React.ReactElement {
       {/* Provider picker — big cards so the choice is obvious */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">{t('settings.mapProvider')}</label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           <button
             type="button"
             onClick={() => changeProvider('leaflet')}
@@ -303,7 +303,26 @@ export default function MapSettingsTab(): React.ReactElement {
               </div>
               <div className="hidden sm:block text-xs text-slate-500 mt-0.5">{t('settings.mapMapLibreSubtitle')}</div>
             </div>
+          
+          <button
+            type="button"
+            onClick={() => changeProvider('amap')}
+            disabled={!amapKey.trim()}
+            className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors ${
+              provider === 'amap'
+                ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-slate-200'
+                : amapKey.trim()
+                  ? 'border-slate-200 hover:border-slate-400 dark:border-slate-700'
+                  : 'border-slate-100 opacity-50 cursor-not-allowed dark:border-slate-800'
+            }`}
+          >
+            <Map size={18} className="mt-0.5 flex-shrink-0 text-slate-700 dark:text-slate-300" />
+            <div>
+              <div className="text-sm font-medium text-slate-900 dark:text-white">高德地图</div>
+              <div className="hidden sm:block text-xs text-slate-500 mt-0.5">{t('settings.mapAmapSubtitle')}</div>
+            </div>
           </button>
+</button>
         </div>
         <p className="text-xs text-slate-400 mt-2">
           {t('settings.mapProviderHint')}
@@ -490,6 +509,26 @@ export default function MapSettingsTab(): React.ReactElement {
         </div>
       </div>
 
+
+      {/* 高德地图 Key 输入 */}
+      {provider === 'amap' && !managed && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('settings.mapAmapKey')}</label>
+          <input
+            type="text"
+            value={amapKey}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmapKey(e.target.value)}
+            placeholder="请输入高德 Web 端 API Key"
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            {t('settings.mapAmapKeyHint')}{' '}
+            <a href="https://lbs.amap.com/api/javascript-api-v2/guide/abc/prepare" target="_blank" rel="noreferrer" className="underline">
+              高德开放平台
+            </a>
+          </p>
+        </div>
+      )}
       <button type="button"
         onClick={saveMapSettings}
         disabled={saving}

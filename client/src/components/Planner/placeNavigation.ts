@@ -2,10 +2,11 @@ import type { AssignmentPlace, Place } from '../../types'
 import { getCoMapsUrlForPlace } from './placeCoMaps'
 import { getGoogleMapsUrlForPlace } from './placeGoogleMaps'
 import { getOpenStreetMapUrlForPlace } from './placeOpenStreetMap'
+import { getAmapUrlForPlace } from './placeAmap'
 
 type PlaceLike = Pick<Place | AssignmentPlace, 'name' | 'address' | 'lat' | 'lng' | 'google_place_id' | 'google_ftid'>
 
-export type NavigationAppId = 'google' | 'waze' | 'apple' | 'osm' | 'comaps'
+export type NavigationAppId = 'google' | 'waze' | 'apple' | 'osm' | 'comaps' | 'amap'
 
 export interface NavigationTarget {
   id: NavigationAppId
@@ -83,6 +84,10 @@ export function getNavigationTargets(
       })
     }
   }
+
+  // 高德地图外部跳转（与 Google/Apple Maps 对齐 UI 样式）
+  const amapUrl = getAmapUrlForPlace(place)
+  if (amapUrl) targets.push({ id: 'amap', label: '高德地图', url: amapUrl })
 
   const osmUrl = getOpenStreetMapUrlForPlace(place)
   if (osmUrl) targets.push({ id: 'osm', label: 'OpenStreetMap', url: osmUrl })

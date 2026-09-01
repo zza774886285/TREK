@@ -1,0 +1,217 @@
+import { useEffect, useRef, useState, useCallback, memo } from 'react'
+import { useSettingsStore } from '../../store/settingsStore'
+import { wgs84ToGcj02 } from '@trek/shared'
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/mapDefaults'
+import type { Place } from '../../types'
+
+/* ── 高德 JS API 类型声明 ────────────────────────────────────────────── */
+interface AMapMarker {
+  setMap(map: AMapMap | null): void
+  on(event: string, handler: () => void): void
+  off(event: string, handler: () => void): void
+  setPosition(lnglat: AMapLngLat): void
+  setContent(content: string | HTMLElement): void
+  setExtData(data: unknown): unknown
+  getExtData(): unknown
+}
+
+interface AMapPolyline {
+  setMap(map: AMapMap | null): void
+}
+
+interface AMapLngLat {
+  new (lng: number, lat: number): AMapLngLat
+  getPosition(): { lng: number; lat: number }
+}
+
+interface AMapMap {
+  new (container: string | HTMLElement, opts?: unknown): AMapMap
+  destroy(): void
+  add(overlay: AMapMarker | AMapPolyline | AMapMarker[]): void
+  remove(overlay: AMapMarker | AMapPolyline): void
+  clearMap(): void
+  setCenter(lnglat: AMapLngLat): void
+  setZoomAndCenter(zoom: number, center: AMapLngLat): void
+  setFitView(overlays?: AMapMarker[], fitViewOptions?: unknown): void
+  on(event: string, handler: (e: unknown) => void): void
+  off(event: string, handler: (e: unknown) => void): void
+}
+
+declare global {
+  interface Window {
+    AMap?: {
+      Map: new (container: string | HTMLElement, opts?: unknown) => AMapMap
+      Marker: new (opts?: unknown) => AMapMarker
+      Polyline: new (opts?: unknown) => AMapPolyline
+      LngLat: new (lng: number, lat: number) => AMapLngLat
+      Icon: new (opts?: unknown) => unknown
+      Size: new (w: number, h: number) => unknown
+      load(): Promise<void>
+    }
+  }
+}
+
+/* ── 工具函数 ──────────────────────────────────────────────────────────── */
+function gcjPosition(lng: number, lat: number): [number, number] {
+  return wgs84ToGcj02(lng, lat)
+}
+
+function loadAmapScript(apiKey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.AMap) { resolve(); return }
+    const existing = document.querySelector(`script[src*="webapi.amap.com"]`)
+    if (existing) { existing.addEventListener('load', () => resolve()); return }
+    const script = document.createElement('script')
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.Marker,AMap.Polyline`
+    script.onload = () => {
+      window.AMap?.load?.().then(() => resolve()).catch(() => resolve())
+    }
+    script.onerror = () => reject(new Error('Failed to load AMap JS API'))
+    document.head.appendChild(script)
+  })
+}
+
+/* ── 组件 ──────────────────────────────────────────────────────────────── */
+export interface MapViewAmapProps {
+  places?: Place[]
+  dayPlaces?: Place[]
+  route?: [number, number][][] | null
+  selectedPlaceId?: number | null
+  onMarkerClick?: (place: Place) => void
+  center?: [number, number]
+  zoom?: number
+  fitKey?: number
+}
+
+export const MapViewAmap = memo(function MapViewAmap({
+  places = [],
+  dayPlaces = [],
+  route = null,
+  selectedPlaceId = null,
+  onMarkerClick,
+  center = DEFAULT_MAP_CENTER,
+  zoom = DEFAULT_MAP_ZOOM,
+  fitKey = 0,
+}: MapViewAmapProps) {
+  const apiKey = useSettingsStore(s => s.settings.amap_api_key || '')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<AMapMap | null>(null)
+  const markersRef = useRef<AMapMarker[]>([])
+  const polylinesRef = useRef<AMapPolyline[]>([])
+  const [mapReady, setMapReady] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  /* 初始化地图 */
+  useEffect(() => {
+    if (!apiKey || !containerRef.current) return
+    let alive = true
+
+    loadAmapScript(apiKey).then(() => {
+      if (!alive || !containerRef.current || !window.AMap) return
+      const AMap = window.AMap
+      const [cLng, cLat] = gcjPosition(center[1], center[0])
+      mapRef.current = new AMap.Map(containerRef.current, {
+        zoom,
+        center: [cLng, cLat],
+        mapStyle: 'amap://styles/normal',
+        viewMode: '2D',
+      })
+      setMapReady(true)
+    }).catch(err => {
+      if (alive) setError(err instanceof Error ? err.message : 'Failed to load AMap')
+    })
+
+    return () => {
+      alive = false
+      if (mapRef.current) {
+        mapRef.current.destroy()
+        mapRef.current = null
+      }
+    }
+  }, [apiKey])
+
+  /* 更新 markers */
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.AMap) return
+    const AMap = window.AMap
+    const map = mapRef.current
+
+    // 清除旧 markers
+    markersRef.current.forEach(m => map.remove(m))
+    markersRef.current = []
+
+    const allPlaces = dayPlaces.length > 0 ? dayPlaces : places
+    allPlaces.forEach(place => {
+      if (place.lat == null || place.lng == null) return
+      const [gcjLng, gcjLat] = gcjPosition(place.lng, place.lat)
+      const isSelected = place.id === selectedPlaceId
+      const size = isSelected ? 36 : 28
+      const color = isSelected ? '#6366f1' : '#3b82f6'
+      const html = `<div style="
+        width:${size}px;height:${size}px;border-radius:50%;
+        background:${color};border:3px solid white;
+        box-shadow:0 2px 6px rgba(0,0,0,0.3);
+        display:flex;align-items:center;justify-content:center;
+        color:white;font-size:${size * 0.4}px;font-weight:bold;
+        cursor:pointer;transform:translate(-50%,-50%);
+      ">${place.name?.charAt(0) || '📍'}</div>`
+
+      const marker = new AMap.Marker({
+        position: new AMap.LngLat(gcjLng, gcjLat),
+        content: html,
+        offset: new AMap.Pixel(-size / 2, -size / 2),
+        extData: place,
+      })
+      marker.on('click', () => onMarkerClick?.(place))
+      map.add(marker)
+      markersRef.current.push(marker)
+    })
+  }, [mapReady, places, dayPlaces, selectedPlaceId, onMarkerClick, fitKey])
+
+  /* 更新路线 polyline */
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.AMap) return
+    const AMap = window.AMap
+    const map = mapRef.current
+
+    polylinesRef.current.forEach(p => map.remove(p))
+    polylinesRef.current = []
+
+    if (!route) return
+    route.forEach(segment => {
+      const path = segment.map(([lng, lat]) => {
+        const [gcjLng, gcjLat] = gcjPosition(lng, lat)
+        return new AMap.LngLat(gcjLng, gcjLat)
+      })
+      const polyline = new AMap.Polyline({
+        path,
+        strokeColor: '#3b82f6',
+        strokeWeight: 4,
+        strokeOpacity: 0.8,
+        lineJoin: 'round',
+      })
+      map.add(polyline)
+      polylinesRef.current.push(polyline)
+    })
+  }, [mapReady, route, fitKey])
+
+  /* 自动适配视野 */
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || markersRef.current.length === 0) return
+    mapRef.current.setFitView(markersRef.current, { padding: [60, 60, 60, 60] })
+  }, [mapReady, fitKey])
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm">
+        高德地图加载失败: {error}
+      </div>
+    )
+  }
+
+  return (
+    <div ref={containerRef} className="w-full h-full" style={{ minHeight: 400 }} />
+  )
+})
+
+export default MapViewAmap

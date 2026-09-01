@@ -1,8 +1,11 @@
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import { useSettingsStore } from '../../store/settingsStore'
 import { MapView } from './MapView'
 import ErrorBoundary from '../shared/ErrorBoundary'
 import { MapViewGLMapbox, MapViewGLMaplibre } from './glLazy'
+
+// 高德地图懒加载，避免非高德用户加载多余 JS
+const MapViewAmap = lazy(() => import('./MapViewAmap').then(m => ({ default: m.MapViewAmap })))
 
 // Auto-selects the map renderer based on user settings. Keeps the existing
 // Leaflet MapView untouched so the Mapbox GL variant can mature iteratively
@@ -16,6 +19,19 @@ import { MapViewGLMapbox, MapViewGLMaplibre } from './glLazy'
 export function MapViewAuto(props: any) {
   const provider = useSettingsStore(s => s.settings.map_provider)
   const token = useSettingsStore(s => s.settings.mapbox_access_token)
+  const amapKey = useSettingsStore(s => s.settings.amap_api_key)
+
+  // 高德地图：有 key 才启用，否则降级到 Leaflet
+  if (provider === 'amap' && amapKey) {
+    return (
+      <ErrorBoundary boundaryId="map:amap" fallback={<MapView {...props} />}>
+        <Suspense fallback={<MapView {...props} />}>
+          <MapViewAmap {...props} />
+        </Suspense>
+      </ErrorBoundary>
+    )
+  }
+
   // Fall back to Leaflet when Mapbox is selected but no token is set,
   // so trip planner never shows an empty map due to a missing token.
   const glProvider = provider === 'maplibre-gl' ? 'maplibre-gl'

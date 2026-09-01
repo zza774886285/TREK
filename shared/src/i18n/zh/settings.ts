@@ -519,3 +519,9 @@ const settings: TranslationStrings = {
 };
 
 export default settings;
+
+  // ── 高德地图 ──
+  'settings.mapAmapSubtitle': '中国境内首选，GCJ-02 坐标系',
+  'settings.mapAmapKey': '高德 Web 端 API Key',
+  'settings.mapAmapKeyHint': '用于高德地图底图和 POI 搜索。在 lbs.amap.com 免费申请',
+  'settings.mapAmapKeyMissing': '未填写 Key 时高德选项置灰不可选，自动降级到 Leaflet。',
