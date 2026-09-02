@@ -201,21 +201,29 @@ export const MapViewAmap = memo(function MapViewAmap({
     const activeRoute = route && route.length > 0 ? route : lastRouteRef.current
     if (!activeRoute) return
 
-    activeRoute.forEach(segment => {
-      const path = segment.map(([lng, lat]) => {
+    activeRoute.forEach((segment) => {
+      // route data is [lat, lng] (GeoJSON order) — swap to (lng, lat) for AMap
+      const path = segment.map(([lat, lng]) => {
         const [gcjLng, gcjLat] = gcjPosition(lng, lat)
         return new AMap.LngLat(gcjLng, gcjLat)
       })
       const polyline = new AMap.Polyline({
         path,
         strokeColor: '#3b82f6',
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
+        strokeWeight: 6,
+        strokeOpacity: 1.0,
         lineJoin: 'round',
+        lineCap: 'round',
+        zIndex: 120,
+        visible: true,
       })
       map.add(polyline)
       polylinesRef.current.push(polyline)
     })
+    // Fit view to include polylines
+    if (polylinesRef.current.length > 0) {
+      map.setFitView(polylinesRef.current as any, false)
+    }
   }, [mapReady, route, fitKey])
 
   /* 自动适配视野 */
