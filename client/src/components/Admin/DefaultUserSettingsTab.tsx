@@ -49,6 +49,8 @@ type Defaults = {
   maplibre_style?: string
   mapbox_3d_enabled?: boolean
   mapbox_quality_mode?: boolean
+  amap_api_key?: string
+  amap_service_key?: string
 }
 
 type MapProvider = 'leaflet' | GlMapProvider | 'amap'

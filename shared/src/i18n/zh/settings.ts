@@ -516,7 +516,6 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'API 密钥已创建',
   'settings.apiKeys.modal.createdWarning': '请立即复制密钥。它只显示一次，之后无法再次获取。',
   'settings.apiKeys.modal.done': '完成',
-  'settings.apiKeys.modal.done': '完成',
 
   // ── 高德地图 ──
   'settings.mapAmapSubtitle': '中国境内首选，GCJ-02 坐标系',

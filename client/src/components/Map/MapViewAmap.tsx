@@ -3,61 +3,8 @@ import { useSettingsStore } from '../../store/settingsStore'
 import { wgs84ToGcj02 } from '@trek/shared'
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/mapDefaults'
 import type { Place } from '../../types'
-
-/* ── 高德 JS API 类型声明 ────────────────────────────────────────────── */
-interface AMapPixel {
-  x: number
-  y: number
-}
-
-interface AMapMarker {
-  setMap(map: AMapMap | null): void
-  on(event: string, handler: () => void): void
-  off(event: string, handler: () => void): void
-  setPosition(lnglat: AMapLngLat): void
-  getPosition(): AMapLngLat
-  setContent(content: string | HTMLElement): void
-  setExtData(data: unknown): unknown
-  getExtData(): unknown
-  setOffset(offset: AMapPixel): void
-}
-
-interface AMapPolyline {
-  setMap(map: AMapMap | null): void
-}
-
-interface AMapLngLat {
-  new (lng: number, lat: number): AMapLngLat
-  getPosition(): { lng: number; lat: number }
-}
-
-interface AMapMap {
-  new (container: string | HTMLElement, opts?: unknown): AMapMap
-  destroy(): void
-  add(overlay: AMapMarker | AMapPolyline | AMapMarker[]): void
-  remove(overlay: AMapMarker | AMapPolyline): void
-  clearMap(): void
-  setCenter(lnglat: AMapLngLat): void
-  setZoomAndCenter(zoom: number, center: AMapLngLat): void
-  setFitView(overlays?: AMapMarker[], fitViewOptions?: unknown): void
-  on(event: string, handler: (e: unknown) => void): void
-  off(event: string, handler: (e: unknown) => void): void
-}
-
-declare global {
-  interface Window {
-    AMap?: {
-      Map: new (container: string | HTMLElement, opts?: unknown) => AMapMap
-      Marker: new (opts?: unknown) => AMapMarker
-      Polyline: new (opts?: unknown) => AMapPolyline
-      LngLat: new (lng: number, lat: number) => AMapLngLat
-      Icon: new (opts?: unknown) => unknown
-      Size: new (w: number, h: number) => unknown
-      Pixel: new (x: number, y: number) => AMapPixel
-      load(): Promise<void>
-    }
-  }
-}
+import type { AMapMap, AMapMarker, AMapLngLat, AMapPolyline } from './amapTypes'
+import './amapTypes' // ensure global Window.AMap declaration is loaded
 
 /* ── 工具函数 ──────────────────────────────────────────────────────────── */
 function gcjPosition(lng: number, lat: number): [number, number] {

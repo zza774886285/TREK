@@ -546,7 +546,6 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'API key created',
   'settings.apiKeys.modal.createdWarning': 'Copy the key now. It is shown once and cannot be retrieved later.',
   'settings.apiKeys.modal.done': 'Done',
-  'settings.apiKeys.modal.done': 'Done',
 
   // ── AMap (Gaode) ──
   'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
