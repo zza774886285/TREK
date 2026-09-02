@@ -543,6 +543,15 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'API 키를 만들었습니다',
   'settings.apiKeys.modal.createdWarning': '지금 키를 복사하세요. 한 번만 표시되며 나중에 다시 확인할 수 없습니다.',
   'settings.apiKeys.modal.done': '완료',
+
+  // ── AMap (Gaode) ──
+  'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
+  'settings.mapAmapKey': 'AMap Web API Key',
+  'settings.mapAmapKeyHint': 'For AMap basemap tiles and POI search. Free at lbs.amap.com',
+  'settings.mapAmapKeyMissing': 'AMap option is greyed out without a key. Falls back to Leaflet automatically.',
+  'settings.poiSearchSource': 'POI Search Source',
+  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.',
+
 };
 
 export default settings;

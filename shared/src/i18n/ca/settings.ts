@@ -559,6 +559,15 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'Clau API creada',
   'settings.apiKeys.modal.createdWarning': 'Copia la clau ara. Només es mostra un cop i no es pot recuperar després.',
   'settings.apiKeys.modal.done': 'Fet',
+
+  // ── AMap (Gaode) ──
+  'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
+  'settings.mapAmapKey': 'AMap Web API Key',
+  'settings.mapAmapKeyHint': 'For AMap basemap tiles and POI search. Free at lbs.amap.com',
+  'settings.mapAmapKeyMissing': 'AMap option is greyed out without a key. Falls back to Leaflet automatically.',
+  'settings.poiSearchSource': 'POI Search Source',
+  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.',
+
 };
 
 export default settings;

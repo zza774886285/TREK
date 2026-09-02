@@ -558,6 +558,15 @@ const settings: TranslationStrings = {
   'settings.apiKeys.modal.createdTitle': 'Ключ API создан',
   'settings.apiKeys.modal.createdWarning': 'Скопируйте ключ сейчас. Он показывается один раз, позже получить его нельзя.',
   'settings.apiKeys.modal.done': 'Готово',
+
+  // ── AMap (Gaode) ──
+  'settings.mapAmapSubtitle': 'Preferred in China, GCJ-02 coordinate system',
+  'settings.mapAmapKey': 'AMap Web API Key',
+  'settings.mapAmapKeyHint': 'For AMap basemap tiles and POI search. Free at lbs.amap.com',
+  'settings.mapAmapKeyMissing': 'AMap option is greyed out without a key. Falls back to Leaflet automatically.',
+  'settings.poiSearchSource': 'POI Search Source',
+  'settings.poiSearchSourceHint': 'Switch the data source for place search. AMap POI requires an AMap API Key.',
+
 };
 
 export default settings;

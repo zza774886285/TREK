@@ -217,7 +217,7 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
     if (nextProvider !== 'leaflet' && nextProvider !== 'amap') {
       // Load + save the new provider's own style slot so the other provider's style is kept.
       const slot = nextProvider === 'maplibre-gl' ? defaults.maplibre_style : defaults.mapbox_style
-      const nextStyle = styleForProvider(nextProvider, slot)
+      const nextStyle = styleForProvider(nextProvider as GlMapProvider, slot)
       setMapboxStyle(nextStyle)
       patch[styleSettingKey(nextProvider)] = nextStyle
     }
