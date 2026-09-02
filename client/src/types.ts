@@ -128,6 +128,8 @@ export interface Settings {
   carto_api_key?: string
   /** 高德 Web 端 API Key，用于高德地图底图和 POI 搜索。 */
   amap_api_key?: string
+  /** 高德 Web 服务 Key，用于路线规划等 REST API。 */
+  amap_service_key?: string
   /** POI 地点搜索源：osm = Nominatim (默认) / amap = 高德 POI */
   poi_search_source?: 'osm' | 'amap'
   mapbox_access_token?: string
