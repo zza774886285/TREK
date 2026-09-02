@@ -1019,14 +1019,14 @@ export function MapViewGL({
         locationMarkerRef.current.destroy()
         locationMarkerRef.current = null
       }
-      try { map.remove() } catch { /* noop */ }
+      // Stop animations first, then defer remove() to next frame so pending
+      // async tile requests get cancelled gracefully instead of throwing AbortError.
+      try { map.stop() } catch { /* noop */ }
       mapRef.current = null
-      // Drop the debug handle too, or a style switch keeps every torn-down map
-      // (canvas and sources included) alive for the rest of the page's life. The
-      // identity check leaves a freshly built map alone if this cleanup runs late.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((window as any).__trek_map === map) delete (window as any).__trek_map
       setMapReady(false)
+      setTimeout(() => { try { map.remove() } catch { /* noop */ } }, 0)
     }
   }, [glProvider, glStyle, mapboxToken, enableMapbox3d, mapboxQuality]) // rebuild on provider/style changes only
 

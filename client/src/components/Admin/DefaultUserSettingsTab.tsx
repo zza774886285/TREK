@@ -51,10 +51,14 @@ type Defaults = {
   mapbox_quality_mode?: boolean
 }
 
-type MapProvider = 'leaflet' | GlMapProvider
+type MapProvider = 'leaflet' | GlMapProvider | 'amap'
 
 function normalizeProvider(value: unknown): MapProvider {
-  return value === 'mapbox-gl' || value === 'maplibre-gl' ? value : 'leaflet'
+  return value === 'mapbox-gl' || value === 'maplibre-gl' || value === 'amap' ? value : 'leaflet'
+}
+
+function isGlProvider(p: MapProvider): p is GlMapProvider {
+  return p === 'mapbox-gl' || p === 'maplibre-gl'
 }
 
 /** Only the GL providers keep a style — Leaflet is handled by its callers. */
@@ -128,7 +132,7 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
       setMapTileUrl(normalizeTileUrl(data.map_tile_url || ''))
       setMapboxToken(data.mapbox_access_token || '')
       setCartoKey(data.carto_api_key || '')
-      setMapboxStyle(provider === 'leaflet' ? (data.mapbox_style || '') : styleForProvider(provider, provider === 'maplibre-gl' ? data.maplibre_style : data.mapbox_style))
+      setMapboxStyle(provider === 'leaflet' || provider === 'amap' ? (data.mapbox_style || '') : styleForProvider(provider, provider === 'maplibre-gl' ? data.maplibre_style : data.mapbox_style))
       setLoaded(true)
     }).catch(() => setLoaded(true))
   }, [])
@@ -152,7 +156,7 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
       if (key === 'carto_api_key') setCartoKey('')
       if (key === 'mapbox_style' || key === 'maplibre_style') {
         const provider = normalizeProvider(defaults.map_provider)
-        setMapboxStyle(provider === 'leaflet' ? '' : defaultStyleForProvider(provider))
+        setMapboxStyle(provider === 'leaflet' || provider === 'amap' ? '' : defaultStyleForProvider(provider))
       }
       toast.success(t('admin.defaultSettings.reset'))
     } catch (err: unknown) {
@@ -204,11 +208,11 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
 
   const darkMode = defaults.dark_mode
   const mapProvider = normalizeProvider(defaults.map_provider)
-  const glStylePresets = mapProvider === 'leaflet' ? [] : getStylePresets(mapProvider)
+  const glStylePresets = mapProvider === 'leaflet' || mapProvider === 'amap' ? [] : getStylePresets(mapProvider)
   const styleKey: keyof Defaults = mapProvider === 'maplibre-gl' ? 'maplibre_style' : 'mapbox_style'
   const saveMapProvider = (nextProvider: MapProvider) => {
     const patch: Partial<Defaults> = { map_provider: nextProvider }
-    if (nextProvider !== 'leaflet') {
+    if (nextProvider !== 'leaflet' && nextProvider !== 'amap') {
       // Load + save the new provider's own style slot so the other provider's style is kept.
       const slot = nextProvider === 'maplibre-gl' ? defaults.maplibre_style : defaults.mapbox_style
       const nextStyle = styleForProvider(nextProvider, slot)
@@ -400,6 +404,7 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
             { value: 'leaflet', label: t('admin.defaultSettings.providerLeaflet') },
             { value: 'mapbox-gl', label: t('admin.defaultSettings.providerMapbox') },
             { value: 'maplibre-gl', label: t('admin.defaultSettings.providerMapLibre') },
+            { value: 'amap', label: '高德地图' },
           ] as const).map(opt => (
             <OptionButton
               key={opt.value}
@@ -411,7 +416,7 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
           ))}
         </OptionRow>
 
-        {mapProvider !== 'leaflet' && (
+        {(mapProvider === 'mapbox-gl' || mapProvider === 'maplibre-gl') && (
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
             {/* The token comes with the instance on a managed install, injected when the
               settings are read. A field here would only let somebody save a worse one. */}
@@ -487,6 +492,42 @@ export default function DefaultUserSettingsTab(): React.ReactElement {
             </OptionRow>
             </>
             )}
+          </div>
+        )}
+
+        {mapProvider === 'amap' && (
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-content-secondary">
+                高德地图 API Key
+                <ResetButton field="amap_api_key" />
+              </label>
+              <input
+                type="text"
+                value={defaults.amap_api_key || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => save({ amap_api_key: e.target.value })}
+                placeholder="输入高德地图 Web JS API Key"
+                spellCheck={false}
+                autoComplete="off"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+              />
+              <p className="text-xs mt-1 text-content-faint">用于地图渲染，无 Key 时自动降级到标准地图</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-content-secondary">
+                高德地图 Service Key
+                <ResetButton field="amap_service_key" />
+              </label>
+              <input
+                type="text"
+                value={defaults.amap_service_key || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => save({ amap_service_key: e.target.value })}
+                placeholder="用于 POI 搜索等服务端功能（可选）"
+                spellCheck={false}
+                autoComplete="off"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+              />
+            </div>
           </div>
         )}
       </div>

@@ -185,17 +185,23 @@ export const MapViewAmap = memo(function MapViewAmap({
     })
   }, [mapReady, places, dayPlaces, selectedPlaceId, onMarkerClick, fitKey])
 
-  /* 更新路线 polyline */
+  /* 更新路线 polyline — cache last non-null route to survive provider-switch null gap */
+  const lastRouteRef = useRef<[number, number][][] | null>(null)
   useEffect(() => {
     if (!mapReady || !mapRef.current || !window.AMap) return
     const AMap = window.AMap
     const map = mapRef.current
 
+    // Cache latest non-null route so provider-switch gap still draws
+    if (route && route.length > 0) lastRouteRef.current = route
+
     polylinesRef.current.forEach(p => map.remove(p))
     polylinesRef.current = []
 
-    if (!route) return
-    route.forEach(segment => {
+    const activeRoute = route && route.length > 0 ? route : lastRouteRef.current
+    if (!activeRoute) return
+
+    activeRoute.forEach(segment => {
       const path = segment.map(([lng, lat]) => {
         const [gcjLng, gcjLat] = gcjPosition(lng, lat)
         return new AMap.LngLat(gcjLng, gcjLat)
@@ -217,6 +223,22 @@ export const MapViewAmap = memo(function MapViewAmap({
     if (!mapReady || !mapRef.current || markersRef.current.length === 0) return
     mapRef.current.setFitView(markersRef.current, { padding: [60, 60, 60, 60] })
   }, [mapReady, fitKey])
+
+  /* fly-to on selectedPlaceId change — mirrors Leaflet SelectionController */
+  const prevSelectedRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!selectedPlaceId || !mapRef.current || selectedPlaceId === prevSelectedRef.current) {
+      prevSelectedRef.current = selectedPlaceId
+      return
+    }
+    const allPlaces = dayPlaces.length > 0 ? dayPlaces : places
+    const selected = allPlaces.find(p => p.id === selectedPlaceId)
+    if (selected?.lat != null && selected?.lng != null) {
+      const [gcjLng, gcjLat] = gcjPosition(selected.lng, selected.lat)
+      mapRef.current.setCenter(new (window.AMap!.LngLat)(gcjLng, gcjLat))
+    }
+    prevSelectedRef.current = selectedPlaceId
+  }, [selectedPlaceId, places, dayPlaces])
 
   if (error) {
     return (

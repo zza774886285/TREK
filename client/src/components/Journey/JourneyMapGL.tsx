@@ -495,8 +495,11 @@ function JourneyMapGL(
         popupRef.current = null
       }
       highlightedRef.current = null
-      try { map.remove() } catch { /* noop */ }
+      // Stop animations first, then defer remove() to next frame so pending
+      // async tile requests get cancelled gracefully instead of throwing AbortError.
+      try { map.stop() } catch { /* noop */ }
       mapRef.current = null
+      setTimeout(() => { try { map.remove() } catch { /* noop */ } }, 0)
     }
   }, [entries, stableTrail, stableTracks, glProvider, glStyle, mapboxToken, enableMapbox3d, mapboxQuality, fullScreen, paddingBottom])
 
