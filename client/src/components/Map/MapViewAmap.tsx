@@ -5,14 +5,21 @@ import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/mapDefault
 import type { Place } from '../../types'
 
 /* ── 高德 JS API 类型声明 ────────────────────────────────────────────── */
+interface AMapPixel {
+  x: number
+  y: number
+}
+
 interface AMapMarker {
   setMap(map: AMapMap | null): void
   on(event: string, handler: () => void): void
   off(event: string, handler: () => void): void
   setPosition(lnglat: AMapLngLat): void
+  getPosition(): AMapLngLat
   setContent(content: string | HTMLElement): void
   setExtData(data: unknown): unknown
   getExtData(): unknown
+  setOffset(offset: AMapPixel): void
 }
 
 interface AMapPolyline {
@@ -46,6 +53,7 @@ declare global {
       LngLat: new (lng: number, lat: number) => AMapLngLat
       Icon: new (opts?: unknown) => unknown
       Size: new (w: number, h: number) => unknown
+      Pixel: new (x: number, y: number) => AMapPixel
       load(): Promise<void>
     }
   }
