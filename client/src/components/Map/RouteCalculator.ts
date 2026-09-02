@@ -2,8 +2,40 @@ import { useSettingsStore } from '../../store/settingsStore'
 import { pluginsApi } from '../../api/client'
 import type { DistanceUnit, RouteResult, RouteSegment, RouteWithLegs, Waypoint, RouteAnchors } from '../../types'
 import { formatDistance } from '../../utils/units'
+import { wgs84ToGcj02, gcj02ToWgs84 } from '@trek/shared'
 
 const OSRM_BASE = 'https://router.project-osrm.org/route/v1'
+
+// ── 高德路线规划 API ──────────────────────────────────────────────────────
+const AMAP_DRIVING_URL = 'https://restapi.amap.com/v3/direction/driving'
+const AMAP_WALKING_URL = 'https://restapi.amap.com/v3/direction/walking'
+const AMAP_RIDING_URL = 'https://restapi.amap.com/v3/direction/bicycling'
+
+function getAmapServiceKey(): string {
+  return useSettingsStore.getState().settings.amap_service_key || ''
+}
+
+/** WGS84 → GCJ02, 返回 "lng,lat" 格式（高德 API 要求） */
+function wgs84ToAmapCoord(lng: number, lat: number): string {
+  const [gcjLng, gcjLat] = wgs84ToGcj02(lng, lat)
+  return `${gcjLng},${gcjLat}`
+}
+
+/** GCJ02 polyline 字符串 → WGS84 [lat, lng][] 数组 */
+function amapPolylineToCoords(polyline: string): [number, number][] {
+  return polyline.split(';').map(pair => {
+    const [gcjLng, gcjLat] = pair.split(',').map(Number)
+    const [wgsLng, wgsLat] = gcj02ToWgs84(gcjLng, gcjLat)
+    return [wgsLat, wgsLng] // GeoJSON [lat, lng]
+  })
+}
+
+function amapProfile(profile: RouteProfileKey): 'driving' | 'walking' | 'riding' | null {
+  if (profile === 'driving') return 'driving'
+  if (profile === 'walking') return 'walking'
+  if (profile === 'cycling') return 'riding'
+  return null
+}
 
 // FOSSGIS hosts OSRM with real per-profile routing (car/foot/bike) — the
 // project-osrm.org demo is car-only (it ignores the profile in the URL). Use
@@ -278,6 +310,93 @@ export async function calculateSegments(
 }
 
 /**
+ * 高德路线规划 REST API。
+ * 驾车: https://restapi.amap.com/v3/direction/driving
+ * 步行: https://restapi.amap.com/v3/direction/walking
+ * 骑行: https://restapi.amap.com/v3/direction/bicycling
+ *
+ * 输入 WGS84 坐标，自动转 GCJ02 调用高德，返回结果再转回 WGS84。
+ * 支持途经点（waypoints），最多 16 个。
+ */
+async function calculateRouteWithAmap(
+  waypoints: Waypoint[],
+  mode: 'driving' | 'walking' | 'riding',
+  serviceKey: string,
+  { signal }: { signal?: AbortSignal } = {}
+): Promise<RouteWithLegs> {
+  const urlMap = { driving: AMAP_DRIVING_URL, walking: AMAP_WALKING_URL, riding: AMAP_RIDING_URL }
+  const apiUrl = urlMap[mode]
+
+  const origin = wgs84ToAmapCoord(waypoints[0].lng, waypoints[0].lat)
+  const destination = wgs84ToAmapCoord(waypoints[waypoints.length - 1].lng, waypoints[waypoints.length - 1].lat)
+
+  const params = new URLSearchParams({
+    key: serviceKey,
+    origin,
+    destination,
+    output: 'JSON',
+    strategy: mode === 'driving' ? '0' : '10',
+  })
+
+  // 途经点: 从第 2 个到倒数第 2 个
+  if (waypoints.length > 2) {
+    const viaStr = waypoints.slice(1, -1)
+      .map(p => wgs84ToAmapCoord(p.lng, p.lat))
+      .join(';')
+    params.set('waypoints', viaStr)
+  }
+
+  const response = await fetch(`${apiUrl}?${params.toString()}`, { signal })
+  if (!response.ok) throw new Error('AMap route request failed')
+
+  const data = await response.json()
+  if (data.status !== '1' || !data.route?.paths?.[0]) {
+    throw new Error(data.info || 'AMap no route found')
+  }
+
+  const path = data.route.paths[0]
+  const totalDistance = Number(path.distance)
+  const totalDuration = Number(path.duration)
+
+  // 拼接所有 steps 的 polyline → 完整路线坐标
+  const allCoords: [number, number][] = []
+  for (const step of path.steps) {
+    if (step.polyline) {
+      allCoords.push(...amapPolylineToCoords(step.polyline))
+    }
+  }
+
+  // 去重连续重复点
+  const coords: [number, number][] = []
+  for (const c of allCoords) {
+    const last = coords[coords.length - 1]
+    if (!last || last[0] !== c[0] || last[1] !== c[1]) coords.push(c)
+  }
+
+  // 用 waypoints 构造 legs（与 OSRM 行为一致）
+  const legs: RouteSegment[] = []
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const from: [number, number] = [waypoints[i].lat, waypoints[i].lng]
+    const to: [number, number] = [waypoints[i + 1].lat, waypoints[i + 1].lng]
+    const mid: [number, number] = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2]
+    const segDistance = totalDistance / (waypoints.length - 1)
+    const segDuration = totalDuration / (waypoints.length - 1)
+    const walkingDuration = segDistance / (5000 / 3600)
+    legs.push({
+      mid, from, to,
+      distance: Math.round(segDistance),
+      duration: Math.round(segDuration),
+      walkingText: formatDuration(walkingDuration),
+      drivingText: formatDuration(segDuration),
+      distanceText: formatRouteDistance(segDistance),
+      durationText: formatDuration(segDuration),
+    })
+  }
+
+  return { coordinates: coords, distance: totalDistance, duration: totalDuration, legs }
+}
+
+/**
  * One OSRM call per waypoint-run that returns BOTH the real road geometry (for the
  * map) and per-leg distance/duration (for the sidebar connectors). Results are cached
  * by the exact waypoint list. Throws on OSRM failure so callers can fall back to a
@@ -344,6 +463,24 @@ export async function calculateRouteWithLegs(
     return result
   }
 
+  // ── 高德路线规划分支 ────────────────────────────────────────────────────
+  const amapMode = amapProfile(profile)
+  const amapKey = getAmapServiceKey()
+  if (amapMode && amapKey) {
+    try {
+      const result = await calculateRouteWithAmap(waypoints, amapMode, amapKey, { signal })
+      routeCache.set(cacheKey, result)
+      if (routeCache.size > ROUTE_CACHE_MAX) {
+        const oldest = routeCache.keys().next().value
+        if (oldest !== undefined) routeCache.delete(oldest)
+      }
+      return result
+    } catch {
+      // 高德失败时 fallback 到 OSRM（中国境外或 key 失效）
+    }
+  }
+
+  // ── OSRM fallback（原有逻辑不变）────────────────────────────────────────
   const osrmProfile = (profile === 'walking' || profile === 'cycling') ? profile : 'driving'
   const url = `${OSRM_PROFILE_BASE[osrmProfile]}/${coords}?overview=full&geometries=geojson&annotations=distance,duration`
   const response = await fetch(url, { signal })
