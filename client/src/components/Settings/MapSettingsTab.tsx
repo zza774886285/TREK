@@ -145,7 +145,7 @@ function normalizeProvider(value: unknown): Provider {
 function styleForProvider(provider: Provider, style?: string | null): string {
   if (provider === 'leaflet') return style || MAPBOX_DEFAULT_STYLE
   if (provider === 'mapbox-gl' && isOpenFreeMapStyle(style)) return MAPBOX_DEFAULT_STYLE
-  return normalizeStyleForProvider(provider, style)
+  return normalizeStyleForProvider(provider as GlMapProvider, style)
 }
 
 // Each GL provider has its own style slot, so toggling providers never clobbers the
